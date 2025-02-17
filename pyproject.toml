@@ -3,6 +3,7 @@ name = "skiplessonparser"
 version = "0.1.0"
 description = ""
 authors = [
+    {name = "Bybyzilo", email = "btwpochatok@gmail.com"},
     {name = "mayn3r", email = "mayneryt@bk.ru"}
 ]
 license = {text = "MIT"}
