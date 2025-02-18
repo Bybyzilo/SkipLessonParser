@@ -23,7 +23,7 @@ async def main():
     parser = AioGradebookParser()
     
     auth_data: UserAuthModel = await parser.auth(username, password)
-    print(auth_data.data.user)
+    print(auth_data)
     
 
 
