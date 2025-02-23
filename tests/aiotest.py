@@ -25,12 +25,9 @@ async def main():
     auth_data: UserAuthModel = await parser.auth(username, password)
     #print(auth_data.data.user)
     
-    journal = await parser.journal.get('2024-2025', 2)
+    journal = await parser.journal.get(journal_id=334392) # 334392 -> Деловая коммуникация
+    
     print(journal)
-    
-    # journal = await parser.journal.get(journal_id=334392) # 334392 -> Деловая коммуникация
-    
-    # print(journal)
 
     
 
