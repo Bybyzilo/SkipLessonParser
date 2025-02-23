@@ -9,7 +9,7 @@ class AuthResponseDataToDataModel(BaseModel):
     refresh_token: str = Field(validation_alias='refreshToken')
     uid_1c: str
     id: int
-    recaptcha: Any
+    recaptcha: Any = None
 
 
 class AuthResponseDataModel(BaseModel):
