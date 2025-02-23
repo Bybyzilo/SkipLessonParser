@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Union, List, Any
+from typing import Any
 
 
 class RolesModel(BaseModel):
@@ -18,15 +18,15 @@ class UserModel(BaseModel):
     existLinkedAccounts: bool
     fio: str
     first_name: str
-    fullName: str
+    full_name: str = Field(validation_alias='fullName')
     group: str
     group_id: int = Field(validation_alias='groupID')
     last_name: str
     login: str
     middle_name: str
-    parentID: Union[int, str, None]
-    photoLink: Optional[str]
-    roles: List[RolesModel]
+    parentID: int | str | None
+    photoLink: str | None
+    roles: list[RolesModel]
     shortFIO: str 
     specialityCode: Any
     status: Any
@@ -37,7 +37,7 @@ class UserModel(BaseModel):
 
 class UserAuthData(BaseModel):
     benchmark: Any
-    username: Optional[str] = Field(validation_alias='userName')
+    username: str | None = Field(validation_alias='userName')
     user: UserModel
     
 
@@ -45,6 +45,6 @@ class UserAuthModel(BaseModel):
     accessToken: Any
     data: UserAuthData
     expiresIn: int
-    msg: Optional[str]
+    msg: str | None
     requertAt: int
     state: int
