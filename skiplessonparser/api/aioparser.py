@@ -12,44 +12,50 @@ class AioGradebookParser(BaseParserModel["AioGradebookParser"]):
         self.client.headers = self.meta.headers
         
     
-    async def _auto_set_cookies(self) -> Cookies:
-        """ Автоматически получает и устанавливает cookies в self.client """
+    class Auth(BaseParserModel.Auth):
+        async def _auto_set_cookies(self) -> Cookies:
+            """ Автоматически получает и устанавливает cookies в self.client """
+            
+            await self.gradebook_parser.client.get(self.meta.urls.main_url)
         
-        await self.client.get(self.meta.urls.main_url)
-    
-    
-    async def _get_random_identity(self) -> str:
-        response: Response = await self.client.get(self.meta.urls.get_random_identity)
         
-        return self._auth_data._get_random_identity(response)
+        async def _get_random_identity(self) -> str:
+            response: Response = await self.gradebook_parser.client.get(self.meta.urls.get_random_identity)
+            
+            return super()._get_random_identity(response)
 
-    
-    async def auth(self, username: str, password: str) -> UserAuthModel:
-        """  """
-        await self._auto_set_cookies()
-        identity: str = await self._get_random_identity()
         
-        json_data = {
-            'userName': username,
-            'password': password,
-            'isParent': False,
-            'fingerprint': identity,
-            'recaptchaToken': None,
-            'redirect': False,
-        }
-        
-        response: Response = await self.client.post(self.meta.urls.auth_url, json=json_data)
-        
-        self._auth_data._auth(response=response, client=self.client)
-        
-        auth2_response: Response = await self.client.get(self.meta.urls.auth_url)
-        
-        model = UserAuthModel.model_validate(auth2_response.json())
-        return model
+        async def __call__(self, username: str, password: str) -> UserAuthModel:
+            """ Auth user """
+            
+            await self._auto_set_cookies()
+            identity: str = await self._get_random_identity()
+            
+            json_data = {
+                'userName': username,
+                'password': password,
+                'isParent': False,
+                'fingerprint': identity,
+                'recaptchaToken': None,
+                'redirect': False,
+            }
+            
+            response: Response = await self.gradebook_parser.client.post(self.meta.urls.auth_url, json=json_data)
+            
+            self._auth(response=response, client=self.gradebook_parser.client)
+            
+            auth2_response: Response = await self.gradebook_parser.client.get(self.meta.urls.auth_url)
+            
+            model = UserAuthModel.model_validate(auth2_response.json())
+            return model
 
 
     class Journal(BaseParserModel.Journal):
-        async def list(self, year: str, sem: int, **kwargs) -> JournalListModel:
+        
+        async def list(self,
+                    year: str | None = None, 
+                    sem:  int | None = None,
+            **kwargs) -> JournalListModel:
             """ Получение списка предметов
             
             Аргументы:
@@ -60,11 +66,20 @@ class AioGradebookParser(BaseParserModel["AioGradebookParser"]):
                 JournalListModel -> Модель журнала со всеми предметами и информаци о них
             """
             
+            if (year is None) and (sem is None):
+                year, sem = self._get_auto_list_args()
+            
             params = self._get_request_params(year, sem, **kwargs)
             response: Response = await self.gradebook_parser.client.get("https://edu.donstu.ru/api/Journals/JournalList", params=params)
             
             model: JournalListModel = self._get_journal_list_model_by_response(response)
             return model
+        
+        
+        async def get_discipline_ids(self, *args, **kwargs):
+            journal_list: JournalListModel = await self.list(*args, **kwargs)
+            
+            return self._get_discipline_ids(journal_list)
 
 
         async def get(self, journal_id: int) -> JournalModel:

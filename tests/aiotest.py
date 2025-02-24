@@ -5,6 +5,8 @@ import asyncio
 from skiplessonparser import AioGradebookParser
 from skiplessonparser.models import UserAuthModel
 
+from pprint import pprint
+
 try:
     import config
 except ImportError:
@@ -22,12 +24,12 @@ if not (username and password):
 async def main():
     parser = AioGradebookParser()
     
+    # Авторизация (обязательно)
     auth_data: UserAuthModel = await parser.auth(username, password)
     #print(auth_data.data.user)
     
-    journal = await parser.journal.get(journal_id=334392) # 334392 -> Деловая коммуникация
-    
-    print(journal)
+    items: dict[int, str] = await parser.journal.get_discipline_ids()
+    pprint(items)
 
     
 

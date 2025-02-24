@@ -1,17 +1,20 @@
 import json
+from datetime import datetime
 
 from abc import ABC, abstractmethod
 from typing import Union, TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
-from skiplessonparser.models import AuthResponseModel, JournalListModel, JournalModel
+from skiplessonparser.models import journal_list_models, AuthResponseModel, JournalListModel, JournalModel
 
+# TODO: mayn3r(24.02.25 11:30) -> Увеличить кол-во выполняемых функций базовым классом BaseParserModel,
+# В дочерних классах (sync и async) сделать минимально возможную реализацию (только запросы)
 
 T = TypeVar("T")
 class BaseParserModel(Generic[T]):
     def __init__(self):
         self.meta = self.Meta()
-        self._auth_data = self.Auth(self)
+        self.auth = self.Auth(self)
         self.journal = self.Journal(self)
     
     
@@ -26,21 +29,25 @@ class BaseParserModel(Generic[T]):
             auth_url = "https://edu.donstu.ru/api/tokenauth"
     
     
-    class Auth:
+    class Auth(ABC):
         def __init__(self, gradebook_parser: T):
             self.gradebook_parser = gradebook_parser
-    
+            self.meta = self.gradebook_parser.meta
+            
+
         def _get_random_identity(self, response: Response) -> str:
             parse_json = json.loads(response.text)
-            
             self.gradebook_parser.meta.identity = parse_json['data']['randomIdentity']
             
             return self.gradebook_parser.meta.identity
+
         
-        
+        @abstractmethod
+        def _auto_set_cookies(self):
+            ...
+    
         @staticmethod
         def _auth(response: Response, client: Client | AsyncClient):
-            
             model = AuthResponseModel.model_validate(response.json())
             auth_token: str = model.data.access_token
             
@@ -61,6 +68,32 @@ class BaseParserModel(Generic[T]):
         @abstractmethod
         def get(self, journal_id: int):
             ...
+        
+        
+        @staticmethod
+        def _get_auto_list_args() -> tuple[str, int]:
+            now = datetime.now()
+            if now.month > 9:
+                sem = 1
+                year = "%d-%d" % (now.year, now.year)
+            else:
+                sem = 2
+                year = '%d-%d' % (now.year-1, now.year)
+            
+            return (year, sem)
+            
+        
+        
+        @staticmethod
+        def _get_discipline_ids(model: JournalListModel) -> dict[int, str]:
+            return_list: journal_list_models.ReturnListItem = model.data.returnList
+            
+            items = {}
+            for item in return_list:
+                items[item.id] = item.dis
+            
+            return items
+        
         
         @staticmethod
         def _get_request_params(year: str, sem: int, **kwargs):
