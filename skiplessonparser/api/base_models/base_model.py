@@ -5,10 +5,8 @@ from abc import ABC, abstractmethod
 from typing import Union, TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
-from skiplessonparser.models import journal_list_models, AuthResponseModel, JournalListModel, JournalModel
+from skiplessonparser.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel
 
-# TODO: mayn3r(24.02.25 11:30) -> Увеличить кол-во выполняемых функций базовым классом BaseParserModel,
-# В дочерних классах (sync и async) сделать минимально возможную реализацию (только запросы)
 
 T = TypeVar("T")
 class BaseParserModel(Generic[T]):
@@ -33,6 +31,18 @@ class BaseParserModel(Generic[T]):
         def __init__(self, gradebook_parser: T):
             self.gradebook_parser = gradebook_parser
             self.meta = self.gradebook_parser.meta
+        
+        
+        @staticmethod
+        def _get_auth_json_data(username: str, password: str, identity):
+            return {
+                'userName': username,
+                'password': password,
+                'isParent': False,
+                'fingerprint': identity,
+                'recaptchaToken': None,
+                'redirect': False,
+            }
             
 
         def _get_random_identity(self, response: Response) -> str:
@@ -46,13 +56,20 @@ class BaseParserModel(Generic[T]):
         def _auto_set_cookies(self):
             ...
     
+    
         @staticmethod
-        def _auth(response: Response, client: Client | AsyncClient):
+        def _set_auth_token(client: Client | AsyncClient, response: Response):
             model = AuthResponseModel.model_validate(response.json())
             auth_token: str = model.data.access_token
             
             client.headers.setdefault('authorization', f'Bearer {auth_token}')
             client.cookies.setdefault('authToken', auth_token)
+        
+        
+        @staticmethod
+        def _auth_model(client: Client | AsyncClient, response: Response):
+            model = UserAuthModel.model_validate(response.json())
+            return model
     
     
     class Journal(ABC):

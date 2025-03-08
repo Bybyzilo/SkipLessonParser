@@ -31,23 +31,14 @@ class AioGradebookParser(BaseParserModel["AioGradebookParser"]):
             await self._auto_set_cookies()
             identity: str = await self._get_random_identity()
             
-            json_data = {
-                'userName': username,
-                'password': password,
-                'isParent': False,
-                'fingerprint': identity,
-                'recaptchaToken': None,
-                'redirect': False,
-            }
+            auth_token_response: Response = await self.gradebook_parser.client.post(
+                self.meta.urls.auth_url, 
+                json=self._get_auth_json_data(username, password, identity)
+            )
+            self._set_auth_token(client=self.gradebook_parser.client, response=auth_token_response)
             
-            response: Response = await self.gradebook_parser.client.post(self.meta.urls.auth_url, json=json_data)
-            
-            self._auth(response=response, client=self.gradebook_parser.client)
-            
-            auth2_response: Response = await self.gradebook_parser.client.get(self.meta.urls.auth_url)
-            
-            model = UserAuthModel.model_validate(auth2_response.json())
-            return model
+            auth_response: Response = await self.gradebook_parser.client.get(self.meta.urls.auth_url)
+            return self._auth_model(self.gradebook_parser.client, auth_response)
 
 
     class Journal(BaseParserModel.Journal):
@@ -59,8 +50,10 @@ class AioGradebookParser(BaseParserModel["AioGradebookParser"]):
             """ Получение списка предметов
             
             Аргументы:
-                year: str (format: "2024-2025") -> учебные года
-                sem: int -> Номер семестра (1 или 2)
+                year: str | None (format: "2024-2025") -> учебные года
+                sem:  int | None -> Номер семестра (1 или 2)
+                
+                * Если year или sem не указаны (None), то они устаналиваются автоматически
             
             Return:
                 JournalListModel -> Модель журнала со всеми предметами и информаци о них

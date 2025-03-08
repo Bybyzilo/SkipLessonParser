@@ -26,7 +26,7 @@ async def main():
     
     # Авторизация (обязательно)
     auth_data: UserAuthModel = await parser.auth(username, password)
-    #print(auth_data.data.user)
+    print(auth_data.data.user)
     
     items: dict[int, str] = await parser.journal.get_discipline_ids()
     pprint(items)
