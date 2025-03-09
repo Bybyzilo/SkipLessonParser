@@ -10,15 +10,15 @@ from pprint import pprint
 try:
     import config
 except ImportError:
-    pass
+    print("[i] Не найден файл config.py с данными авторизации пользователя на lk.donstu.ru", end='\n\n')
 
 
-username = os.getenv('USERNAME')
-password = os.getenv('PASSWORD')
+username: str = os.getenv('USERNAME')
+password: str = os.getenv('PASSWORD')
 
-if not (username and password):
-    print("Укажите данные авторизации")
-    sys.exit()
+# if not (username and password):
+#     print("Укажите данные авторизации")
+#     sys.exit()
 
 
 async def main():
@@ -30,6 +30,9 @@ async def main():
     
     items: dict[int, str] = await parser.journal.get_discipline_ids()
     pprint(items)
+    
+    journal = await parser.journal.get(379884)
+    pprint(journal.data.journalData)
 
     
 

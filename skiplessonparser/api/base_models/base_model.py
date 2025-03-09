@@ -6,6 +6,7 @@ from typing import Union, TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
 from skiplessonparser.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel
+from skiplessonparser import errors
 
 
 T = TypeVar("T")
@@ -24,7 +25,9 @@ class BaseParserModel(Generic[T]):
         class Urls:
             main_url: str = "https://edu.donstu.ru/"
             get_random_identity: str = "https://edu.donstu.ru/api/UserInfo/Devices/RandomIdentity"
-            auth_url = "https://edu.donstu.ru/api/tokenauth"
+            auth_url: str = "https://edu.donstu.ru/api/tokenauth"
+            journal_list: str = "https://edu.donstu.ru/api/Journals/JournalList"
+            journal_by_id: str = "https://edu.donstu.ru/api/Journals/Journal?journalID={id}"
     
     
     class Auth(ABC):
@@ -55,10 +58,18 @@ class BaseParserModel(Generic[T]):
         @abstractmethod
         def _auto_set_cookies(self):
             ...
+        
+        
+        def __call__(self, username: str, password: str):
+            """ Авторизация """
+            
+            if not (username and password):
+                raise errors.EmptyAuthDataError
+
     
     
         @staticmethod
-        def _set_auth_token(client: Client | AsyncClient, response: Response):
+        def _set_auth_token(client: Client | AsyncClient, response: Response) -> None:
             model = AuthResponseModel.model_validate(response.json())
             auth_token: str = model.data.access_token
             
@@ -67,7 +78,7 @@ class BaseParserModel(Generic[T]):
         
         
         @staticmethod
-        def _auth_model(client: Client | AsyncClient, response: Response):
+        def _auth_model(response: Response):
             model = UserAuthModel.model_validate(response.json())
             return model
     
@@ -75,6 +86,7 @@ class BaseParserModel(Generic[T]):
     class Journal(ABC):
         def __init__(self, gradebook_parser: T):
             self.gradebook_parser = gradebook_parser
+            self.meta = self.gradebook_parser.meta
         
         
         @abstractmethod
