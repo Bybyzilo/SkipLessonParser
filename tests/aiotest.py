@@ -1,9 +1,9 @@
 import sys, os
-sys.path.extend(['../skiplessonparser', '../../skiplessonparser', 'tests'])
+sys.path.extend(['../donstuapi', '../../donstuapi', 'tests'])
 
 import asyncio
-from skiplessonparser import AioGradebookParser
-from skiplessonparser.models import UserAuthModel
+from donstuapi import AioGradebookParser
+from donstuapi.models import UserAuthModel
 
 from pprint import pprint
 

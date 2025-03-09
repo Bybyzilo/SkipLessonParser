@@ -1,7 +1,7 @@
 from httpx import AsyncClient, Response, Cookies
 
-from skiplessonparser.api.base_models import BaseParserModel
-from skiplessonparser.models import UserAuthModel, JournalListModel, JournalModel
+from donstuapi.api.base_models import BaseParserModel
+from donstuapi.models import UserAuthModel, JournalListModel, JournalModel
 
 
 class AioGradebookParser(BaseParserModel["AioGradebookParser"]):

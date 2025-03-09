@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from typing import Union, TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
-from skiplessonparser.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel
-from skiplessonparser import errors
+from donstuapi.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel
+from donstuapi import errors
 
 
 T = TypeVar("T")
