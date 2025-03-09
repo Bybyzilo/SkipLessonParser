@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.extend(['../donstuapi', '../../donstuapi', 'tests'])
 
 import asyncio
@@ -8,7 +9,7 @@ from donstuapi.models import UserAuthModel
 from pprint import pprint
 
 try:
-    import config
+    import config  # noqa: F401
 except ImportError:
     print("[i] Не найден файл config.py с данными авторизации пользователя на lk.donstu.ru", end='\n\n')
 

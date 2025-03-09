@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from abc import ABC, abstractmethod
-from typing import Union, TypeVar, Generic
+from typing import TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
 from donstuapi.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel

@@ -1,4 +1,4 @@
-from httpx import AsyncClient, Response, Cookies
+from httpx import AsyncClient, Response
 
 from donstuapi.api.base_models import BaseParserModel
 from donstuapi.models import UserAuthModel, JournalListModel, JournalModel
