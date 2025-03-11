@@ -4,7 +4,7 @@ from donstuapi.api.base_models import BaseParserModel
 from donstuapi.models import UserAuthModel, JournalListModel, JournalModel
 
 
-class AioGradebookParser(BaseParserModel["AioGradebookParser"]):
+class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
     def __init__(self):
         super().__init__()
         

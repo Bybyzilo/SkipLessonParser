@@ -1,8 +1,8 @@
-from donstuapi.api.parser import GradebookParser
-from donstuapi.api.aioparser import AioGradebookParser
+from donstuapi.api.donstuapi import DonstuAPI
+from donstuapi.api.aiodonstuapi import AioDonstuAPI
 
 
 __all__ = (
-    'GradebookParser',
-    'AioGradebookParser'
+    'DonstuAPI',
+    'AioDonstuAPI'
 )

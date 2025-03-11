@@ -71,6 +71,9 @@ class BaseParserModel(Generic[T]):
         @staticmethod
         def _set_auth_token(client: Client | AsyncClient, response: Response) -> None:
             model = AuthResponseModel.model_validate(response.json())
+            if isinstance(model.data, str):
+                raise errors.AuthError(model.msg)
+            
             auth_token: str = model.data.access_token
             
             client.headers.setdefault('authorization', f'Bearer {auth_token}')

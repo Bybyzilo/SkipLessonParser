@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Optional
+from typing import Any
 
 
 class AuthResponseDataToDataModel(BaseModel):
@@ -14,7 +14,7 @@ class AuthResponseDataToDataModel(BaseModel):
 
 class AuthResponseDataModel(BaseModel):
     state: int
-    msg: Optional[str]
+    msg: str | None
     data: AuthResponseDataToDataModel
     access_token: str = Field(validation_alias='accessToken')
     requertAt: int
@@ -22,7 +22,7 @@ class AuthResponseDataModel(BaseModel):
 
 
 class AuthResponseModel(BaseModel):
-    data: AuthResponseDataModel
+    data: AuthResponseDataModel | str
     state: int
-    msg: Optional[str]
-    time: int | float
+    msg: str | None
+    time: int | float | None = None

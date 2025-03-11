@@ -6,4 +6,8 @@ class EmptyAuthDataError(BaseException):
             message = "Укажите данные авторизации"
             
         super().__init__(message)
+
+
+
+class AuthError(BaseException): ...
     
