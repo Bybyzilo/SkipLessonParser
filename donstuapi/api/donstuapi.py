@@ -16,11 +16,11 @@ class DonstuAPI(BaseParserModel["DonstuAPI"]):
         def _auto_set_cookies(self) -> None:
             """ Автоматически получает и устанавливает cookies в self.client """
             
-            self.gradebook_parser.client.get(self.meta.urls.main_url)
+            self.donstu.client.get(self.meta.urls.main_url)
         
         
         def _get_random_identity(self) -> str:
-            response: Response = self.gradebook_parser.client.get(self.meta.urls.get_random_identity)
+            response: Response = self.donstu.client.get(self.meta.urls.get_random_identity)
             
             return super()._get_random_identity(response)
 
@@ -40,15 +40,15 @@ class DonstuAPI(BaseParserModel["DonstuAPI"]):
             identity: str = self._get_random_identity()
             
             # Отправка запроса на получение токена авторизации
-            auth_token_response: Response = self.gradebook_parser.client.post(
+            auth_token_response: Response = self.donstu.client.post(
                 self.meta.urls.auth_url, 
                 json=self._get_auth_json_data(username, password, identity)
             )
             # Установка токена в cookies
-            self._set_auth_token(client=self.gradebook_parser.client, response=auth_token_response)
+            self._set_auth_token(client=self.donstu.client, response=auth_token_response)
             
             # Получение данных пользователя
-            auth_response: Response = self.gradebook_parser.client.get(self.meta.urls.auth_url)
+            auth_response: Response = self.donstu.client.get(self.meta.urls.auth_url)
             return self._auth_model(auth_response)
 
 
@@ -74,7 +74,7 @@ class DonstuAPI(BaseParserModel["DonstuAPI"]):
                 year, sem = self._get_auto_list_args()
             
             params = self._get_request_params(year, sem, **kwargs)
-            response: Response = self.gradebook_parser.client.get(self.meta.urls.journal_list, params=params)
+            response: Response = self.donstu.client.get(self.meta.urls.journal_list, params=params)
             
             model: JournalListModel = self._get_journal_list_model_by_response(response)
             return model
@@ -97,7 +97,7 @@ class DonstuAPI(BaseParserModel["DonstuAPI"]):
                 JournalModel -> Модель журнала со всей информацикй о юзерах (оценки, пропуски)
             """
             
-            response = self.gradebook_parser.client.get(self.meta.urls.journal_by_id.format(id=journal_id))
+            response = self.donstu.client.get(self.meta.urls.journal_by_id.format(id=journal_id))
             
             model: JournalModel = self._get_journal_model_by_response(response)
             return model

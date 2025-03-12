@@ -31,9 +31,9 @@ class BaseParserModel(Generic[T]):
     
     
     class Auth(ABC):
-        def __init__(self, gradebook_parser: T):
-            self.gradebook_parser = gradebook_parser
-            self.meta = self.gradebook_parser.meta
+        def __init__(self, donstu: T):
+            self.donstu = donstu
+            self.meta = self.donstu.meta
         
         
         @staticmethod
@@ -50,9 +50,9 @@ class BaseParserModel(Generic[T]):
 
         def _get_random_identity(self, response: Response) -> str:
             parse_json = json.loads(response.text)
-            self.gradebook_parser.meta.identity = parse_json['data']['randomIdentity']
+            self.donstu.meta.identity = parse_json['data']['randomIdentity']
             
-            return self.gradebook_parser.meta.identity
+            return self.donstu.meta.identity
 
         
         @abstractmethod
@@ -87,9 +87,9 @@ class BaseParserModel(Generic[T]):
     
     
     class Journal(ABC):
-        def __init__(self, gradebook_parser: T):
-            self.gradebook_parser = gradebook_parser
-            self.meta = self.gradebook_parser.meta
+        def __init__(self, donstu: T):
+            self.donstu = donstu
+            self.meta = self.donstu.meta
         
         
         @abstractmethod

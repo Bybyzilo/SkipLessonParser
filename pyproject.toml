@@ -1,7 +1,7 @@
 [project]
 name = "donstuapi"
 version = "0.1.0"
-description = ""
+description = "API для работы с edu.donstu.ru"
 authors = [
     {name = "Bybyzilo", email = "btwpochatok@gmail.com"},
     {name = "mayn3r", email = "mayneryt@bk.ru"}
