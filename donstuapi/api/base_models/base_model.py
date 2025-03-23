@@ -1,12 +1,16 @@
-import json
 from datetime import datetime
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic
 from httpx import Response, AsyncClient, Client
 
-from donstuapi.models import journal_list_models, JournalListModel, JournalModel, UserAuthModel, AuthResponseModel
+from donstuapi.models import (
+    journal_list_models, JournalListModel, 
+    UserAuthModel, AuthResponseModel,
+    AccountInfoModel
+)
 from donstuapi import errors
+from donstuapi.models.record_book_model import RecordBookModel
 
 
 T = TypeVar("T")
@@ -14,7 +18,9 @@ class BaseParserModel(Generic[T]):
     def __init__(self):
         self.meta = self.Meta()
         self.auth = self.Auth(self)
+        self.account = self.Account(self)
         self.journal = self.Journal(self)
+        self.recordbook = self.RecordBook(self)
     
     
     class Meta:
@@ -23,12 +29,19 @@ class BaseParserModel(Generic[T]):
             self.headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 YaBrowser/25.2.0.0 Safari/537.36"}
         
         class Urls:
-            main_url: str = "https://edu.donstu.ru/"
-            get_random_identity: str = "https://edu.donstu.ru/api/UserInfo/Devices/RandomIdentity"
-            auth_url: str = "https://edu.donstu.ru/api/tokenauth"
-            journal_list: str = "https://edu.donstu.ru/api/Journals/JournalList"
-            journal_by_id: str = "https://edu.donstu.ru/api/Journals/Journal?journalID={id}"
-    
+            main_url = "https://edu.donstu.ru/"
+            get_random_identity = "https://edu.donstu.ru/api/UserInfo/Devices/RandomIdentity"
+            auth_url = "https://edu.donstu.ru/api/tokenauth"
+            
+            journal_list = "https://edu.donstu.ru/api/Journals/JournalList"
+            journal_by_id = "https://edu.donstu.ru/api/Journals/Journal?journalID={id}"
+            
+            student_account = "https://edu.donstu.ru/api/UserInfo/Student?studentID={id}"
+            feed = "https://edu.donstu.ru/api/Feed?userID={id}"
+            payment = "https://edu.donstu.ru/api/UserInfo/Student/Payment"
+            statistics_marks_count = "https://edu.donstu.ru/api/EducationalActivity/StatisticsMarksCount?studentID={id}"
+            
+            record_book = "https://edu.donstu.ru/api/EducationalActivity/ZachBook?studentID=undefined"
     
     class Auth(ABC):
         def __init__(self, donstu: T):
@@ -49,7 +62,7 @@ class BaseParserModel(Generic[T]):
             
 
         def _get_random_identity(self, response: Response) -> str:
-            parse_json = json.loads(response.text)
+            parse_json = response.json()
             self.donstu.meta.identity = parse_json['data']['randomIdentity']
             
             return self.donstu.meta.identity
@@ -80,11 +93,54 @@ class BaseParserModel(Generic[T]):
             client.cookies.setdefault('authToken', auth_token)
         
         
-        @staticmethod
-        def _auth_model(response: Response):
+        def _auth_model_init(self, response: Response) -> UserAuthModel:
             model = UserAuthModel.model_validate(response.json())
+            
+            self._auth_model = model
+            self.donstu.account.user_id = model.data.user.user_id
+            
             return model
     
+    
+    class Account(ABC):
+        def __init__(self, donstu: T):
+            self.donstu = donstu
+            self.user_id = 0
+            
+            self._info: AccountInfoModel | None = None
+        
+        
+        def get_important_message(self) -> str | None:
+            """ Получение важных сообщений со страницы профиля """
+
+            if self._info is not None:
+                return self._info.data.message
+            else:
+                cls = type(self.donstu).__name__
+                print(
+                    f"WARNING! To call the '{cls}.account.get_important_message()' "
+                    f"method, first get the profile information ('{cls}.account.info')"
+                )
+                return None
+        
+        @abstractmethod
+        def info(self): ...
+        
+        @abstractmethod
+        def feed(self): ...
+        
+        @abstractmethod
+        def payments(self): ...
+        
+        @abstractmethod
+        def statistics_marks_count(): ...
+        
+        @staticmethod
+        def _get_info_model(response: Response) -> AccountInfoModel:
+            model = AccountInfoModel.model_validate(response.json())
+            
+            return model
+        
     
     class Journal(ABC):
         def __init__(self, donstu: T):
@@ -137,17 +193,22 @@ class BaseParserModel(Generic[T]):
                 year=year,
                 sem=sem,
             )
-            
-        @staticmethod
-        def _get_journal_list_model_by_response(response: Response) -> JournalListModel:
-            json_data = response.json()
-            return JournalListModel.model_validate(json_data)
-
+    
+    
+    class RecordBook(ABC):
+        def __init__(self, donstu: T) -> RecordBookModel:
+            self.donstu = donstu
+            self.recordbook_id: int = 0
         
-        @staticmethod
-        def _get_journal_model_by_response(response: Response) -> JournalModel:
-            json_data = response.json()
-            return JournalModel.model_validate(json_data)
+        def _init_info(self, response: Response):
+            """ Docs """
+            
+            model = RecordBookModel.model_validate(response.json()['data'])
+            self.recordbook_id = model.id
+            
+            return model
+            
+
 
         
     

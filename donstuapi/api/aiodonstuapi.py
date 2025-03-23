@@ -1,7 +1,11 @@
 from httpx import AsyncClient, Response
 
 from donstuapi.api.base_models import BaseParserModel
-from donstuapi.models import UserAuthModel, JournalListModel, JournalModel
+from donstuapi.models import (
+    UserAuthModel, JournalListModel, JournalModel, 
+    AccountInfoModel, FeedModel, PaymentModel,
+    StatisticsMarksCountModel, RecordBookModel
+)
 
 
 class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
@@ -49,8 +53,48 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
             
             # Получение данных пользователя
             auth_response: Response = await self.donstu.client.get(self.meta.urls.auth_url)
-            return self._auth_model(auth_response)
+            return self._auth_model_init(auth_response)
+    
+    
+    class Account(BaseParserModel.Account):
 
+        @property
+        async def info(self) -> AccountInfoModel:
+            if self._info is None:
+                url: str = self.donstu.meta.urls.student_account.format(id=self.user_id)
+                response: Response = await self.donstu.client.get(url)
+                
+                self._info: AccountInfoModel = self._get_info_model(response)
+                
+            return self._info
+        
+        
+        async def feed(self) -> FeedModel:
+            """ Получение уведомлений и прочей информации """
+            
+            url: str = self.donstu.meta.urls.feed.format(id=self.user_id)
+            response: Response = await self.donstu.client.get(url)
+            
+            return FeedModel.model_validate(response.json())
+        
+        
+        async def payments(self) -> PaymentModel:
+            """ Получение информации об оплате """
+            
+            url: str = self.donstu.meta.urls.payment
+            response = await self.donstu.client.get(url)
+            
+            return PaymentModel.model_validate(response.json())
+        
+        
+        async def statistics_marks_count(self) -> StatisticsMarksCountModel:
+            """ Получение статистики оценок """
+            
+            url = self.donstu.meta.urls.statistics_marks_count.format(id=self.user_id)
+            response = await self.donstu.client.get(url)
+            
+            return StatisticsMarksCountModel.model_validate(response.json())
+            
 
     class Journal(BaseParserModel.Journal):
         
@@ -76,8 +120,7 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
             params = self._get_request_params(year, sem, **kwargs)
             response: Response = await self.donstu.client.get(self.meta.urls.journal_list, params=params)
             
-            model: JournalListModel = self._get_journal_list_model_by_response(response)
-            return model
+            return JournalListModel.model_validate(response.json())
         
         
         async def get_discipline_ids(self, *args, **kwargs) -> dict:
@@ -97,11 +140,23 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
                 JournalModel -> Модель журнала со всей информацикй о юзерах (оценки, пропуски)
             """
             
-            response = await self.donstu.client.get(self.meta.urls.journal_by_id.format(id=journal_id))
+            url = self.meta.urls.journal_by_id.format(id=journal_id)
+            response = await self.donstu.client.get(url)
             
-            model: JournalModel = self._get_journal_model_by_response(response)
-            return model
+            return JournalModel.model_validate(response.json())
         
+    
+    class RecordBook(BaseParserModel.RecordBook):
+        
+        async def info(self) -> RecordBookModel:
+            """ Получение информации о зачетной книжке """
+            
+            url = self.donstu.meta.urls.record_book
+            response = await self.donstu.client.get(url)
+        
+            return super()._init_info(response)
+            
+            
     
     
     
