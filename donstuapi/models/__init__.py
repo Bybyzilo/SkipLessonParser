@@ -10,6 +10,9 @@ from donstuapi.models.payment_model import PaymentModel
 from donstuapi.models.statistics_marks_count_model import StatisticsMarksCountModel
 
 from donstuapi.models.record_book_model import RecordBookModel
+from donstuapi.models.get_student_by_fio import GetStudentsByFIO
+from donstuapi.models.get_prepods_by_fio import GetPrepodsByFIO
+
 
 __all__ = [
     "AuthResponseModel",
@@ -20,5 +23,7 @@ __all__ = [
     "FeedModel",
     "PaymentModel",
     "StatisticsMarksCountModel",
-    "RecordBookModel"
+    "RecordBookModel",
+    "GetStudentsByFIO",
+    "GetPrepodsByFIO"
 ]

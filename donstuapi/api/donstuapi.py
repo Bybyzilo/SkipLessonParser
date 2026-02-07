@@ -1,3 +1,4 @@
+#type: ignore
 from httpx import Client, Response
 
 from donstuapi.api.base_models import BaseParserModel

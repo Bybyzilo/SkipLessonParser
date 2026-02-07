@@ -1,10 +1,12 @@
+#type: ignore
 from httpx import AsyncClient, Response
 
 from donstuapi.api.base_models import BaseParserModel
 from donstuapi.models import (
-    UserAuthModel, JournalListModel, JournalModel, 
+    GetPrepodsByFIO, UserAuthModel, JournalListModel, JournalModel, 
     AccountInfoModel, FeedModel, PaymentModel,
-    StatisticsMarksCountModel, RecordBookModel
+    StatisticsMarksCountModel, RecordBookModel,
+    GetStudentsByFIO
 )
 
 
@@ -14,6 +16,11 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
         
         self.client = AsyncClient()
         self.client.headers = self.meta.headers
+    
+        
+    # async def auth(self, username: str, password: str) -> UserAuthModel:
+    #     self.auth = self.Auth(self)
+    #     return await self.auth(username, password)
         
     
     class Auth(BaseParserModel.Auth):
@@ -54,7 +61,9 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
             # Получение данных пользователя
             auth_response: Response = await self.donstu.client.get(self.meta.urls.auth_url)
             return self._auth_model_init(auth_response)
-    
+
+
+
     
     class Account(BaseParserModel.Account):
 
@@ -155,6 +164,23 @@ class AioDonstuAPI(BaseParserModel["AioDonstuAPI"]):
             response = await self.donstu.client.get(url)
         
             return super()._init_info(response)
+    
+    
+    class Tools(BaseParserModel.Tools):
+        async def get_students_by_fio(self, fio: str)-> GetStudentsByFIO:
+            url = self.donstu.meta.urls.get_students_by_fio.format(fio=fio)
+            response = await self.donstu.client.get(url)
+            # print(response.json())
+            
+            return super()._init_students_data(response)
+
+        
+        async def get_prepods_by_fio(self, fio: str) -> GetPrepodsByFIO:
+            url = self.donstu.meta.urls.get_prepods_by_fio.format(fio=fio)
+            response = await self.donstu.client.get(url)
+            print(response.json())
+            
+            return super()._init_prepods_data(response)
             
             
     

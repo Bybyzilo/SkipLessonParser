@@ -1,3 +1,4 @@
+# type: ignore
 from datetime import datetime
 
 from abc import ABC, abstractmethod
@@ -7,7 +8,8 @@ from httpx import Response, AsyncClient, Client
 from donstuapi.models import (
     journal_list_models, JournalListModel, 
     UserAuthModel, AuthResponseModel,
-    AccountInfoModel
+    AccountInfoModel, GetStudentsByFIO,
+    GetPrepodsByFIO
 )
 from donstuapi import errors
 from donstuapi.models.record_book_model import RecordBookModel
@@ -21,6 +23,7 @@ class BaseParserModel(Generic[T]):
         self.account = self.Account(self)
         self.journal = self.Journal(self)
         self.recordbook = self.RecordBook(self)
+        self.tools = self.Tools(self)
     
     
     class Meta:
@@ -42,6 +45,13 @@ class BaseParserModel(Generic[T]):
             statistics_marks_count = "https://edu.donstu.ru/api/EducationalActivity/StatisticsMarksCount?studentID={id}"
             
             record_book = "https://edu.donstu.ru/api/EducationalActivity/ZachBook?studentID=undefined"
+            
+            get_students_by_fio = "https://edu.donstu.ru/api/Mail/Find/Students?fio={fio}&kafID=0"
+            get_prepods_by_fio = "https://edu.donstu.ru/api/Mail/Find/Prepods?fio={fio}"
+            
+            avg_mark = "https://edu.donstu.ru/api/EducationalActivity/StudentAvgMark?studentID={id}"
+            statistics_marks_count = "https://edu.donstu.ru/api/EducationalActivity/StatisticsMarksCount?studentID={id}"
+            group_students = "https://edu.donstu.ru/api/Mail/Find/Students?kafID=0&groupID={group_id}"
     
     class Auth(ABC):
         def __init__(self, donstu: T):
@@ -196,18 +206,38 @@ class BaseParserModel(Generic[T]):
     
     
     class RecordBook(ABC):
-        def __init__(self, donstu: T) -> RecordBookModel:
+        def __init__(self, donstu: T):
             self.donstu = donstu
             self.recordbook_id: int = 0
         
-        def _init_info(self, response: Response):
+        def _init_info(self, response: Response) -> RecordBookModel:
             """ Docs """
             
             model = RecordBookModel.model_validate(response.json()['data'])
-            self.recordbook_id = model.id
+            self.recordbook_id = int(model.id)
             
             return model
+    
+    class Tools(ABC):
+        def __init__(self, donstu: T) :
+            self.donstu = donstu
+        
+        @abstractmethod
+        async def get_students_by_fio(self, fio: str) -> GetStudentsByFIO:
+            ...
+        
+        @abstractmethod
+        async def get_prepods_by_fio(self, fio: str) -> GetPrepodsByFIO:
+            ...
+        
+        def _init_students_data(self, response: Response) -> GetStudentsByFIO:
+            model = GetStudentsByFIO.model_validate(response.json())
+            return model
             
+        
+        def _init_prepods_data(self, response: Response) -> GetPrepodsByFIO:
+            model = GetPrepodsByFIO.model_validate(response.json())
+            return model
 
 
         
